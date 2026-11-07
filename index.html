@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriSynth AI - Indian Agriculture & Automated Food Factory Simulator</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            900: '#064e3b',
+                            950: '#022c22'
+                        },
+                        obsidian: {
+                            800: '#0f172a',
+                            900: '#090d16',
+                            950: '#04070d'
+                        },
+                        cyber: {
+                            gold: '#fbbf24',
+                            cyan: '#06b6d4',
+                            violet: '#8b5cf6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+                        display: ['Orbitron', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #04070d;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-display {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .font-mono-code {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .glass-panel {
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(52, 211, 153, 0.2);
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(52, 211, 153, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(52, 211, 153, 0.45);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.25);
+        }
+
+        .neon-glow-emerald {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.25);
+        }
+
+        .neon-glow-cyan {
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.25);
+        }
+
+        .text-gradient-emerald {
+            background: linear-gradient(135deg, #a7f3d0 0%, #34d399 50%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .text-gradient-cyber {
+            background: linear-gradient(135deg, #38bdf8 0%, #34d399 50%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #04070d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(52, 211, 153, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(52, 211, 153, 0.6);
+        }
+
+        /* Animated grid background */
+        .cyber-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(16, 185, 129, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
+        }
+
+        .pulse-border {
+            animation: pulseBorder 3s infinite alternate;
+        }
+
+        @keyframes pulseBorder {
+            0% { border-color: rgba(52, 211, 153, 0.2); }
+            50% { border-color: rgba(6, 182, 212, 0.5); }
+            100% { border-color: rgba(52, 211, 153, 0.2); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-obsidian-950 cyber-grid">
+
+    <!-- Ambient Glow Effects -->
+    <div class="fixed top-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-emerald-900/10 blur-[150px] pointer-events-none z-0"></div>
+    <div class="fixed top-[45%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-cyan-900/10 blur-[160px] pointer-events-none z-0"></div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div class="relative z-10 flex flex-col min-h-screen">
+
+        <!-- HEADER & NAVIGATION -->
+        <header class="sticky top-0 z-40 w-full glass-panel border-b border-emerald-500/20 px-4 lg:px-8 py-3.5">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                
+                <!-- Branding -->
+                <a href="#" class="flex items-center space-x-3 group">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 via-emerald-600 to-cyan-700 flex items-center justify-center text-obsidian-950 font-black text-xl shadow-lg group-hover:scale-105 transition-transform border border-emerald-300">
+                        <i class="fa-solid fa-dna"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold tracking-wider text-white flex items-center gap-2 font-display">
+                            AGRISYNTH <span class="text-gradient-emerald">AI</span>
+                        </h1>
+                        <p class="text-[10px] text-emerald-400/90 font-mono tracking-widest uppercase">Indian Crop Intelligence & Landless Food Synthesis</p>
+                    </div>
+                </a>
+
+                <!-- Controls & Navigation -->
+                <div class="flex items-center space-x-3">
+                    <button onclick="openKnowledgeModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 text-xs font-semibold transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-book-bookmark text-emerald-400"></i>
+                        <span class="hidden sm:inline">Knowledge Vault</span>
+                    </button>
+                    <button onclick="toggleMobileNav()" class="lg:hidden px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- HERO SECTION & LIVE METRICS -->
+        <section class="max-w-7xl w-full mx-auto px-4 lg:px-8 mt-6">
+            <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-emerald-500/30 relative overflow-hidden neon-glow-emerald">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                    <div class="max-w-2xl">
+                        <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[11px] font-mono uppercase tracking-wider font-bold">
+                            <i class="fa-solid fa-bolt mr-1 text-emerald-400"></i> Next-Gen Food Autonomy
+                        </span>
+                        <h2 class="text-2xl sm:text-4xl font-extrabold text-white font-display mt-3 leading-tight">
+                            Cultivating Fortune in Soil, <span class="text-gradient-emerald">Synthesizing Nutrient Abundance</span> in Factories
+                        </h2>
+                        <p class="text-xs sm:text-sm text-gray-300 mt-2 leading-relaxed">
+                            Simulate the dual future of Indian food security: precision AI tuning for traditional soil farming (Kharif/Rabi/Zaid) alongside landless bioreactor synthesis, automated vertical hydro-towers, and precision microalgae food printing.
+                        </p>
+                    </div>
+
+                    <!-- Live Dynamic Quick Stats -->
+                    <div class="grid grid-cols-2 sm:grid-cols-2 gap-3 w-full lg:w-auto">
+                        <div class="p-3.5 rounded-2xl glass-card border border-emerald-500/20">
+                            <div class="text-[10px] text-gray-400 uppercase font-mono">India Arable Arable Area</div>
+                            <div class="text-lg font-bold text-white font-mono mt-0.5">159.7 M Ha</div>
+                            <span class="text-[10px] text-emerald-400"><i class="fa-solid fa-chart-line mr-1"></i>Optimized by AI</span>
+                        </div>
+                        <div class="p-3.5 rounded-2xl glass-card border border-cyan-500/20">
+                            <div class="text-[10px] text-gray-400 uppercase font-mono">Synth Factory Efficiency</div>
+                            <div class="text-lg font-bold text-cyan-400 font-mono mt-0.5">98.4% Less Water</div>
+                            <span class="text-[10px] text-cyan-300"><i class="fa-solid fa-droplet mr-1"></i>Zero Land Drag</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAIN NAVIGATION TABS -->
+                <div class="mt-8 pt-4 border-t border-emerald-500/20 flex flex-wrap gap-2 text-xs font-semibold">
+                    <button onclick="switchTab('trad-farming')" id="tab-trad-farming" class="main-tab-btn px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                        <i class="fa-solid fa-wheat-awn text-emerald-400"></i> Indian Agriculture & Crop Tuning
+                    </button>
+                    <button onclick="switchTab('synth-factory')" id="tab-synth-factory" class="main-tab-btn px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-emerald-500/10">
+                        <i class="fa-solid fa-industry text-cyan-400"></i> Landless Synth-Factory Simulator
+                    </button>
+                    <button onclick="switchTab('tech-modules')" id="tab-tech-modules" class="main-tab-btn px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-emerald-500/10">
+                        <i class="fa-solid fa-microchip text-cyber-gold"></i> AI & Automated Tech Matrix
+                    </button>
+                    <button onclick="switchTab('comparison')" id="tab-comparison" class="main-tab-btn px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-emerald-500/10">
+                        <i class="fa-solid fa-scale-balanced text-cyber-violet"></i> Land vs Synth Analytics
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="max-w-7xl w-full mx-auto px-4 lg:px-8 my-8 flex-1">
+
+            <!-- TAB 1: INDIAN TRADITIONAL AGRICULTURE & AI CROP TUNER -->
+            <div id="content-trad-farming" class="tab-content space-y-8">
+                
+                <!-- Regional Crops & Season Selector -->
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-emerald-500/30">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-emerald-500/20 pb-4 mb-6">
+                        <div>
+                            <span class="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">Module 01</span>
+                            <h3 class="text-xl sm:text-2xl font-bold text-white font-display">Indian Crop Matrix & Precision Soil Tuning</h3>
+                        </div>
+                        
+                        <!-- Search & Filter Controls -->
+                        <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                            <select id="seasonFilter" onchange="filterCrops()" class="bg-obsidian-950 border border-emerald-500/30 text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-400">
+                                <option value="all">All Seasons (Kharif, Rabi, Zaid)</option>
+                                <option value="Kharif">Kharif Season (Monsoon)</option>
+                                <option value="Rabi">Rabi Season (Winter)</option>
+                                <option value="Zaid">Zaid Season (Summer)</option>
+                            </select>
+                            <input id="cropSearchInput" type="text" oninput="filterCrops()" placeholder="Search crop or state..." class="bg-obsidian-950 border border-emerald-500/30 text-xs text-white rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-400 flex-1 sm:w-48">
+                        </div>
+                    </div>
+
+                    <!-- Crop Cards Grid -->
+                    <div id="cropsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <!-- Dynamic crop cards populated via JS -->
+                    </div>
+                </div>
+
+                <!-- AI Precision Soil & Yield Predictor -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Interactive Tuning Sliders -->
+                    <div class="glass-panel p-6 rounded-3xl border border-emerald-500/30 space-y-4">
+                        <h4 class="text-base font-bold text-white font-display flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-emerald-400"></i> AI Soil & Climate Tuner
+                        </h4>
+                        <p class="text-xs text-gray-300">Adjust parameters to simulate live crop yield optimization across Indian soil profiles.</p>
+
+                        <div class="space-y-3 pt-2">
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-gray-300 mb-1">
+                                    <span>Soil N-P-K Balance Index</span>
+                                    <span id="npkVal" class="text-emerald-400 font-bold">75%</span>
+                                </div>
+                                <input type="range" id="npkSlider" min="20" max="100" value="75" oninput="updateTradSimulation()" class="w-full accent-emerald-500 bg-obsidian-950 h-2 rounded-lg cursor-pointer">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-gray-300 mb-1">
+                                    <span>Monsoon / Drip Irrigation Efficiency</span>
+                                    <span id="irrigVal" class="text-cyan-400 font-bold">80%</span>
+                                </div>
+                                <input type="range" id="irrigSlider" min="10" max="100" value="80" oninput="updateTradSimulation()" class="w-full accent-cyan-500 bg-obsidian-950 h-2 rounded-lg cursor-pointer">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-gray-300 mb-1">
+                                    <span>Pest & Blight AI Defense Shield</span>
+                                    <span id="pestVal" class="text-cyber-gold font-bold">90%</span>
+                                </div>
+                                <input type="range" id="pestSlider" min="30" max="100" value="90" oninput="updateTradSimulation()" class="w-full accent-amber-500 bg-obsidian-950 h-2 rounded-lg cursor-pointer">
+                            </div>
+                        </div>
+
+                        <!-- Result Card -->
+                        <div class="mt-6 p-4 rounded-2xl bg-obsidian-950/80 border border-emerald-500/30 space-y-2">
+                            <div class="text-[11px] font-mono text-gray-400 uppercase">Simulated Yield Output</div>
+                            <div id="simYieldText" class="text-xl font-bold font-mono text-emerald-400">4.82 Ton / Hectare</div>
+                            <div class="text-[10px] text-gray-400 leading-normal">
+                                Soil degradation risk reduced by <span id="soilRiskText" class="text-emerald-300 font-bold">64%</span> using micro-nutrient dosing.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Crop Chart Visualizer -->
+                    <div class="lg:col-span-2 glass-panel p-6 rounded-3xl border border-emerald-500/30 flex flex-col justify-between">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-base font-bold text-white font-display flex items-center gap-2">
+                                <i class="fa-solid fa-chart-area text-emerald-400"></i> Regional Production & AI Forecast (Million MT)
+                            </h4>
+                            <span class="text-xs font-mono text-gray-400">Target Year 2026</span>
+                        </div>
+                        <div class="h-64 sm:h-72 w-full">
+                            <canvas id="cropYieldChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: LANDLESS SYNTH-FACTORY SIMULATOR -->
+            <div id="content-synth-factory" class="tab-content hidden space-y-8">
+                
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-cyan-500/30">
+                    <div class="border-b border-cyan-500/20 pb-4 mb-6">
+                        <span class="text-xs font-mono text-cyan-400 uppercase tracking-widest font-bold">Module 02</span>
+                        <h3 class="text-xl sm:text-2xl font-bold text-white font-display">Landless Food Factory & Bioreactor Synthesis Engine</h3>
+                        <p class="text-xs text-gray-300 mt-1">
+                            Transitioning food creation from open arable soil directly into automated industrial bio-reactors, precision fermentation tanks, microalgae raceways, and 3D molecular nutrient matrix printers.
+                        </p>
+                    </div>
+
+                    <!-- Interactive Synth-Factory Controls & Live Output Visualizer -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        
+                        <!-- Factory Configuration Controls -->
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-bold text-cyan-300 uppercase font-mono tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-cyan-400"></i> Synth Unit Parameters
+                            </h4>
+
+                            <div>
+                                <label class="text-xs text-gray-300 font-mono block mb-1">Target Nutrient Output Type</label>
+                                <select id="nutrientType" onchange="updateSynthSimulation()" class="w-full bg-obsidian-950 border border-cyan-500/30 text-xs text-white rounded-xl px-3 py-2.5 focus:outline-none focus:border-cyan-400">
+                                    <option value="protein">Precision Mycoprotein & Cellular Muscle Paste</option>
+                                    <option value="carbs">Synthetic Carbohydrate & Starch Hydrogel</option>
+                                    <option value="lipid">Microalgae Omega-Rich Lipid Matrix</option>
+                                    <option value="completesynth">Complete Micronutrient Meal (Fortified Dhoon)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-gray-300 mb-1">
+                                    <span>Bioreactor Active Tanks</span>
+                                    <span id="tanksVal" class="text-cyan-400 font-bold">50 Units</span>
+                                </div>
+                                <input type="range" id="tanksSlider" min="10" max="200" value="50" oninput="updateSynthSimulation()" class="w-full accent-cyan-500 bg-obsidian-950 h-2 rounded-lg cursor-pointer">
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-xs font-mono text-gray-300 mb-1">
+                                    <span>AI Enzymatic Catalysis Speed</span>
+                                    <span id="speedVal" class="text-cyber-gold font-bold">2.5x Standard</span>
+                                </div>
+                                <input type="range" id="speedSlider" min="1" max="5" step="0.5" value="2.5" oninput="updateSynthSimulation()" class="w-full accent-amber-500 bg-obsidian-950 h-2 rounded-lg cursor-pointer">
+                            </div>
+
+                            <div class="p-4 rounded-2xl bg-obsidian-950 border border-cyan-500/30 space-y-2">
+                                <div class="flex justify-between text-xs font-mono text-gray-400">
+                                    <span>Equivalent Land Saved:</span>
+                                    <span id="landSavedText" class="text-emerald-400 font-bold">1,250 Hectares</span>
+                                </div>
+                                <div class="flex justify-between text-xs font-mono text-gray-400">
+                                    <span>Water Saved vs Soil:</span>
+                                    <span id="waterSavedText" class="text-cyan-300 font-bold">99.2%</span>
+                                </div>
+                                <div class="flex justify-between text-xs font-mono text-gray-400">
+                                    <span>Daily Nutrient Mass:</span>
+                                    <span id="dailyMassText" class="text-cyber-gold font-bold">18.5 Tons</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Factory Reactor Visualizer -->
+                        <div class="lg:col-span-2 glass-card p-6 rounded-3xl border border-cyan-500/30 flex flex-col justify-between">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-sm font-bold text-white font-display flex items-center gap-2">
+                                    <i class="fa-solid fa-atom text-cyan-400 animate-spin"></i> Automated Bio-Synthesis Chamber Status
+                                </h4>
+                                <span class="px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-mono font-bold">
+                                    SYSTEM ACTIVE • NO LAND DRAG
+                                </span>
+                            </div>
+
+                            <!-- Animated Bioreactor Machine Schematics -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 my-4">
+                                <div class="p-4 rounded-2xl bg-obsidian-950/90 border border-cyan-500/20 flex flex-col items-center text-center">
+                                    <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xl mb-2">
+                                        <i class="fa-solid fa-flask"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-white">Fermentation Tank</span>
+                                    <span class="text-[10px] text-gray-400 font-mono mt-1">Temp: 37.2°C • pH 6.8</span>
+                                    <div class="w-full bg-obsidian-900 rounded-full h-1.5 mt-3 overflow-hidden">
+                                        <div class="bg-cyan-400 h-full w-[85%] animate-pulse"></div>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-obsidian-950/90 border border-emerald-500/20 flex flex-col items-center text-center">
+                                    <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl mb-2">
+                                        <i class="fa-solid fa-vial-circle-check"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-white">Microalgae Raceway</span>
+                                    <span class="text-[10px] text-gray-400 font-mono mt-1">LED Photon 680nm</span>
+                                    <div class="w-full bg-obsidian-900 rounded-full h-1.5 mt-3 overflow-hidden">
+                                        <div class="bg-emerald-400 h-full w-[92%] animate-pulse"></div>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-obsidian-950/90 border border-amber-500/20 flex flex-col items-center text-center">
+                                    <div class="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-xl mb-2">
+                                        <i class="fa-solid fa-print"></i>
+                                    </div>
+                                    <span class="text-xs font-bold text-white">3D Molecular Printer</span>
+                                    <span class="text-[10px] text-gray-400 font-mono mt-1">Dhoon Matrix Formed</span>
+                                    <div class="w-full bg-obsidian-900 rounded-full h-1.5 mt-3 overflow-hidden">
+                                        <div class="bg-amber-400 h-full w-[78%] animate-pulse"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Realtime Synth Chart -->
+                            <div class="h-48 w-full mt-2">
+                                <canvas id="synthOutputChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step-By-Step Landless Process Flow -->
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-cyan-500/30">
+                    <h3 class="text-lg font-bold text-white font-display mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-diagram-project text-cyan-400"></i> How Food Belongs to Machine (Landless Synthesis Workflow)
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="p-4 rounded-2xl bg-obsidian-950 border border-cyan-500/20 relative">
+                            <span class="text-2xl font-black font-mono text-cyan-500/30 absolute top-3 right-4">01</span>
+                            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm mb-3">
+                                <i class="fa-solid fa-database"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">Nutrient Blueprinting</h4>
+                            <p class="text-[11px] text-gray-300 mt-2 leading-relaxed">
+                                AI designs exact amino acid, carbohydrate, and lipid profiles without requiring seeds or soil cultivation.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-obsidian-950 border border-emerald-500/20 relative">
+                            <span class="text-2xl font-black font-mono text-emerald-500/30 absolute top-3 right-4">02</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm mb-3">
+                                <i class="fa-solid fa-temperature-arrow-up"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">Precision Fermentation</h4>
+                            <p class="text-[11px] text-gray-300 mt-2 leading-relaxed">
+                                Microorganisms consume simple feedstock inside closed bioreactors, outputting protein and essential fats at high speed.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-obsidian-950 border border-amber-500/20 relative">
+                            <span class="text-2xl font-black font-mono text-amber-500/30 absolute top-3 right-4">03</span>
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm mb-3">
+                                <i class="fa-solid fa-cubes"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">3D Hydrogel Structuring</h4>
+                            <p class="text-[11px] text-gray-300 mt-2 leading-relaxed">
+                                Synthesized biomolecules are extruded into edible grains, pastes, and fortified staples with optimized taste and shelf stability.
+                            </p>
+                        </div>
+
+                        <div class="p-4 rounded-2xl bg-obsidian-950 border border-purple-500/20 relative">
+                            <span class="text-2xl font-black font-mono text-purple-500/30 absolute top-3 right-4">04</span>
+                            <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm mb-3">
+                                <i class="fa-solid fa-truck-ramp-box"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-white uppercase tracking-wider font-mono">Direct Urban Supply</h4>
+                            <p class="text-[11px] text-gray-300 mt-2 leading-relaxed">
+                                Food synth-factories operate right inside metropolitan centers, ending long transport chains and seasonal shortages.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: AI & AUTOMATED TECH MATRIX -->
+            <div id="content-tech-modules" class="tab-content hidden space-y-8">
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-cyber-gold/30">
+                    <div class="border-b border-cyber-gold/20 pb-4 mb-6">
+                        <span class="text-xs font-mono text-cyber-gold uppercase tracking-widest font-bold">Module 03</span>
+                        <h3 class="text-xl sm:text-2xl font-bold text-white font-display">Automated Technologies & AI Modules</h3>
+                        <p class="text-xs text-gray-300 mt-1">Explore five core pillars of next-generation food autonomy.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="techModulesGrid">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: LAND VS SYNTH ANALYTICS -->
+            <div id="content-comparison" class="tab-content hidden space-y-8">
+                <div class="glass-panel p-6 sm:p-8 rounded-3xl border border-cyber-violet/30">
+                    <div class="border-b border-cyber-violet/20 pb-4 mb-6">
+                        <span class="text-xs font-mono text-cyber-violet uppercase tracking-widest font-bold">Module 04</span>
+                        <h3 class="text-xl sm:text-2xl font-bold text-white font-display">Comparative Analytics: Arable Land vs Synth-Factory</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="glass-card p-6 rounded-2xl border border-cyber-violet/20">
+                            <h4 class="text-sm font-bold text-white font-display mb-4">Resource Consumption Per 1,000 Tons Food</h4>
+                            <div class="h-64">
+                                <canvas id="resourceCompareChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="glass-card p-6 rounded-2xl border border-cyber-violet/20 flex flex-col justify-between space-y-4">
+                            <h4 class="text-sm font-bold text-white font-display">Key Transformation Insights</h4>
+                            
+                            <div class="space-y-3 text-xs text-gray-300">
+                                <div class="p-3 rounded-xl bg-obsidian-950 border border-emerald-500/20">
+                                    <strong class="text-emerald-400 block mb-1">Environmental Reclamation:</strong>
+                                    Shifting 30% of calorie production to synth-factories restores up to 45 Million Hectares of Indian soil to native forests and bio-reserves.
+                                </div>
+                                <div class="p-3 rounded-xl bg-obsidian-950 border border-cyan-500/20">
+                                    <strong class="text-cyan-400 block mb-1">Water Security:</strong>
+                                    Bioreactors operate in closed-loop water cycles, reducing agricultural water consumption by billions of liters annually.
+                                </div>
+                                <div class="p-3 rounded-xl bg-obsidian-950 border border-cyber-gold/20">
+                                    <strong class="text-cyber-gold block mb-1">Climate Resilience:</strong>
+                                    Landless factories are immune to monsoons, droughts, unseasonal heatwaves, and soil erosion.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="glass-panel border-t border-emerald-500/20 py-8 px-4 lg:px-8 mt-12">
+            <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-400">
+                <div class="flex items-center space-x-3">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="font-bold text-white font-display">AGRISYNTH AI</span> — Modern Indian Agriculture & Food Factory Simulator
+                </div>
+                <div class="font-mono text-[11px] text-emerald-400/90">
+                    Precision Soil Tuning • Landless Bioreactors • 3D Food Printing
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- KNOWLEDGE VAULT MODAL -->
+    <div id="knowledgeModal" class="fixed inset-0 bg-obsidian-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel max-w-4xl w-full rounded-3xl p-6 sm:p-8 border border-emerald-500/40 max-h-[85vh] overflow-y-auto relative shadow-2xl">
+            <button onclick="closeKnowledgeModal()" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-obsidian-950 text-emerald-400 hover:bg-emerald-500/20 flex items-center justify-center text-sm border border-emerald-500/30 transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="space-y-6">
+                <div>
+                    <span class="text-xs font-mono text-emerald-400 uppercase tracking-widest font-bold">Knowledge Vault</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white font-display mt-1">The Architecture of Landless Food Synthesis</h2>
+                    <p class="text-xs text-gray-400 mt-1">Comprehensive guide on how machine automation creates food abundance without relying on open soil.</p>
+                </div>
+
+                <div class="space-y-4 text-xs text-gray-300 leading-relaxed border-t border-emerald-500/20 pt-4">
+                    <h3 class="text-base font-bold text-emerald-400 font-display">1. The Transition from Soil Cultivation to Factory Tuning</h3>
+                    <p>
+                        For millennia, human civilization relied on arable soil, seasonal monsoons, and manual labor to produce food. In modern India, while precision agriculture enhances Kharif, Rabi, and Zaid crop yields through AI soil sensing and drip micro-irrigation, land scarcity and climate volatility mandate an alternative paradigm: automated food synthesis factories.
+                    </p>
+
+                    <h3 class="text-base font-bold text-cyan-400 font-display">2. How Bioreactors Synthesize Edible Caloric Mass</h3>
+                    <p>
+                        Precision fermentation utilizes micro-organisms programmed via metabolic engineering. Fed with hydrogen, carbon dioxide, and simple nitrogen compounds, these bio-reactors convert raw elemental feedstocks into complex proteins and fats at double-digit exponential speeds compared to conventional cattle or crop growth cycles.
+                    </p>
+
+                    <h3 class="text-base font-bold text-cyber-gold font-display">3. Microalgae Raceways & 3D Nutrient Extrusion</h3>
+                    <p>
+                        High-efficiency photobioreactor tubes absorb sunlight and LED photons to generate dense chlorophyll, omega fatty acids, and essential vitamins. This slurry is channeled directly into 3D molecular food printers, structuring high-density edible matrices tailored to specific nutritional requirements.
+                    </p>
+
+                    <h3 class="text-base font-bold text-cyber-violet font-display">4. Socio-Economic Empowerment for Farmers</h3>
+                    <p>
+                        Machine-based food synthesis does not replace agricultural communities; it transforms them. Farmers transition from physical manual labor risks into tech operators, managing automated vertical hydro-towers and bioreactor hubs, ensuring guaranteed income and total insulation from crop failure.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC & SIMULATION ENGINE -->
+    <script>
+        // 1. DATASETS
+
+        // Indian Crops Data
+        const indianCrops = [
+            {
+                name: "Rice (Paddy / Chawal)",
+                season: "Kharif",
+                states: "Punjab, West Bengal, UP, Andhra Pradesh",
+                yieldBase: 4.2,
+                waterReq: "High (1200mm)",
+                aiTuning: "Subsurface drip sensing & automated nitrogen dosing."
+            },
+            {
+                name: "Wheat (Gehun)",
+                season: "Rabi",
+                states: "Punjab, Haryana, Madhya Pradesh, UP",
+                yieldBase: 3.8,
+                waterReq: "Moderate (450mm)",
+                aiTuning: "Thermal drone imaging to prevent rust fungus."
+            },
+            {
+                name: "Millets (Jowar, Bajra, Ragi)",
+                season: "Kharif",
+                states: "Rajasthan, Maharashtra, Karnataka",
+                yieldBase: 2.5,
+                waterReq: "Low (300mm)",
+                aiTuning: "Climate-resilient genome tracking & micro-dosing."
+            },
+            {
+                name: "Pulses (Tur, Chana, Moong)",
+                season: "Rabi",
+                states: "Madhya Pradesh, Rajasthan, Maharashtra",
+                yieldBase: 1.9,
+                waterReq: "Low (350mm)",
+                aiTuning: "Rhizobium bacteria inoculation optimization."
+            },
+            {
+                name: "Sugarcane (Ganna)",
+                season: "Kharif",
+                states: "Uttar Pradesh, Maharashtra, Karnataka",
+                yieldBase: 78.0,
+                waterReq: "Very High (1800mm)",
+                aiTuning: "Automated cane-cutting robotics & moisture telemetry."
+            },
+            {
+                name: "Zaid Vegetables (Cucumber, Melon)",
+                season: "Zaid",
+                states: "Northern Plains, River Basin Belts",
+                yieldBase: 12.5,
+                waterReq: "Moderate Drip",
+                aiTuning: "Precision shade nets & hydroponic liquid feeds."
+            }
+        ];
+
+        // Tech Modules Data
+        const techModules = [
+            {
+                icon: "fa-dna",
+                title: "AI Molecular Food Tuning",
+                color: "text-emerald-400",
+                desc: "Algorithmic design of protein chains and micronutrient densities tailored to specific dietary requirements."
+            },
+            {
+                icon: "fa-flask-vial",
+                title: "Bioreactor Fermentation Tanks",
+                color: "text-cyan-400",
+                desc: "Closed-loop stainless steel reactors using precision microbes to yield high-purity protein without soil."
+            },
+            {
+                icon: "fa-building-wheat",
+                title: "Automated Vertical Hydro-Towers",
+                color: "text-cyber-gold",
+                desc: "Multi-story aeroponic towers producing leafy greens and berries with 95% less water and zero pesticides."
+            },
+            {
+                icon: "fa-print",
+                title: "3D Molecular Food Extruders",
+                color: "text-cyber-violet",
+                desc: "Robotic printers converting nutrient hydrogels into structured, appetizing edible staples."
+            },
+            {
+                icon: "fa-sun-plant-wilt",
+                title: "Land Reclamation Engine",
+                color: "text-emerald-400",
+                desc: "Freed arable land is re-wilded with native forests, reversing soil erosion and sequestering carbon."
+            },
+            {
+                icon: "fa-network-wired",
+                title: "Autonomous Agri-Drones",
+                color: "text-cyan-400",
+                desc: "Hyperspectral drone swarms analyzing soil moisture, crop stress, and micro-nutrient deficits in real time."
+            }
+        ];
+
+        // 2. RENDER FUNCTIONS
+
+        // Render Indian Crops
+        function renderCrops(items) {
+            const grid = document.getElementById('cropsGrid');
+            grid.innerHTML = items.map(c => `
+                <div class="glass-card p-5 rounded-2xl border border-emerald-500/20 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">${c.season} Season</span>
+                            <span class="text-[10px] font-mono text-gray-400 font-bold">${c.waterReq}</span>
+                        </div>
+                        <h4 class="text-base font-bold text-white font-display">${c.name}</h4>
+                        <p class="text-[11px] text-gray-400 font-mono"><i class="fa-solid fa-location-dot text-emerald-400 mr-1"></i>${c.states}</p>
+                        <div class="p-3 rounded-xl bg-obsidian-950 border border-emerald-500/10 text-xs text-gray-300">
+                            <strong class="text-emerald-400 font-mono block mb-1">AI Precision Tuning:</strong>
+                            ${c.aiTuning}
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-emerald-500/10 flex justify-between items-center text-xs font-mono">
+                        <span class="text-gray-400">Yield Base:</span>
+                        <span class="text-white font-bold">${c.yieldBase} Ton/Ha</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter Crops
+        function filterCrops() {
+            const season = document.getElementById('seasonFilter').value;
+            const query = document.getElementById('cropSearchInput').value.toLowerCase();
+
+            const filtered = indianCrops.filter(c => {
+                const matchSeason = season === 'all' || c.season === season;
+                const matchQuery = c.name.toLowerCase().includes(query) || c.states.toLowerCase().includes(query);
+                return matchSeason && matchQuery;
+            });
+
+            renderCrops(filtered);
+        }
+
+        // Render Tech Modules
+        function renderTechModules() {
+            const grid = document.getElementById('techModulesGrid');
+            grid.innerHTML = techModules.map(m => `
+                <div class="glass-card p-6 rounded-2xl border border-cyber-gold/20 flex flex-col justify-between space-y-4">
+                    <div class="w-12 h-12 rounded-xl bg-obsidian-950 border border-cyber-gold/30 flex items-center justify-center text-xl ${m.color}">
+                        <i class="fa-solid ${m.icon}"></i>
+                    </div>
+                    <div class="space-y-2">
+                        <h4 class="text-base font-bold text-white font-display">${m.title}</h4>
+                        <p class="text-xs text-gray-300 leading-relaxed">${m.desc}</p>
+                    </div>
+                    <div class="pt-2">
+                        <span class="text-[10px] font-mono text-cyber-gold uppercase font-bold tracking-wider">Fully Automated Module</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 3. CHARTS LOGIC
+
+        let cropChart, synthChart, compareChart;
+
+        function initCharts() {
+            // Chart 1: Crop Yield Chart
+            const ctx1 = document.getElementById('cropYieldChart').getContext('2d');
+            cropChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Rice', 'Wheat', 'Millets', 'Pulses', 'Sugarcane', 'Vegetables'],
+                    datasets: [
+                        {
+                            label: 'Standard Soil Yield (MT/Ha)',
+                            data: [3.2, 3.1, 1.8, 1.2, 65.0, 9.0],
+                            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                            borderColor: 'rgba(52, 211, 153, 0.4)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'AI Tuned Yield (MT/Ha)',
+                            data: [4.8, 4.5, 2.9, 2.1, 85.0, 15.2],
+                            backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                            borderColor: '#34d399',
+                            borderWidth: 1.5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }, grid: { color: 'rgba(52, 211, 153, 0.05)' } },
+                        y: { ticks: { color: '#94a3b8', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: 'rgba(52, 211, 153, 0.1)' } }
+                    }
+                }
+            });
+
+            // Chart 2: Synth Factory Realtime Chart
+            const ctx2 = document.getElementById('synthOutputChart').getContext('2d');
+            synthChart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+                    datasets: [{
+                        label: 'Synthesized Mass Rate (Kg/Hr)',
+                        data: [450, 620, 780, 890, 920, 850, 960],
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.15)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { display: false } },
+                        y: { ticks: { color: '#94a3b8', font: { size: 9 } }, grid: { color: 'rgba(6, 182, 212, 0.1)' } }
+                    }
+                }
+            });
+
+            // Chart 3: Comparison Chart
+            const ctx3 = document.getElementById('resourceCompareChart').getContext('2d');
+            compareChart = new Chart(ctx3, {
+                type: 'radar',
+                data: {
+                    labels: ['Land Footprint', 'Water Usage', 'CO2 Emission', 'Labor Hours', 'Yield Speed'],
+                    datasets: [
+                        {
+                            label: 'Traditional Soil Farming',
+                            data: [95, 90, 75, 85, 30],
+                            borderColor: '#fbbf24',
+                            backgroundColor: 'rgba(251, 191, 36, 0.2)'
+                        },
+                        {
+                            label: 'Synth-Factory Automation',
+                            data: [5, 4, 10, 8, 95],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.2)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { size: 10 } } } },
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255,255,255,0.1)' },
+                            grid: { color: 'rgba(255,255,255,0.1)' },
+                            pointLabels: { color: '#94a3b8', font: { size: 10 } },
+                            ticks: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 4. INTERACTIVE SIMULATION CALCULATORS
+
+        function updateTradSimulation() {
+            const npk = parseInt(document.getElementById('npkSlider').value);
+            const irrig = parseInt(document.getElementById('irrigSlider').value);
+            const pest = parseInt(document.getElementById('pestSlider').value);
+
+            document.getElementById('npkVal').innerText = `${npk}%`;
+            document.getElementById('irrigVal').innerText = `${irrig}%`;
+            document.getElementById('pestVal').innerText = `${pest}%`;
+
+            const calcYield = (2.5 + (npk * 0.015) + (irrig * 0.012) + (pest * 0.008)).toFixed(2);
+            const soilRisk = Math.round((npk + irrig) / 2.5);
+
+            document.getElementById('simYieldText').innerText = `${calcYield} Ton / Hectare`;
+            document.getElementById('soilRiskText').innerText = `${soilRisk}%`;
+        }
+
+        function updateSynthSimulation() {
+            const tanks = parseInt(document.getElementById('tanksSlider').value);
+            const speed = parseFloat(document.getElementById('speedSlider').value);
+
+            document.getElementById('tanksVal').innerText = `${tanks} Units`;
+            document.getElementById('speedVal').innerText = `${speed}x Standard`;
+
+            const landSaved = (tanks * 25 * speed).toLocaleString();
+            const dailyMass = (tanks * 0.37 * speed).toFixed(1);
+            const waterSaved = (98 + (tanks * 0.005)).toFixed(1);
+
+            document.getElementById('landSavedText').innerText = `${landSaved} Hectares`;
+            document.getElementById('waterSavedText').innerText = `${waterSaved}%`;
+            document.getElementById('dailyMassText').innerText = `${dailyMass} Tons`;
+
+            // Update chart data dynamically
+            const newChartData = [
+                Math.round(400 * (tanks / 50) * speed),
+                Math.round(550 * (tanks / 50) * speed),
+                Math.round(750 * (tanks / 50) * speed),
+                Math.round(890 * (tanks / 50) * speed),
+                Math.round(920 * (tanks / 50) * speed),
+                Math.round(880 * (tanks / 50) * speed),
+                Math.round(960 * (tanks / 50) * speed)
+            ];
+            synthChart.data.datasets[0].data = newChartData;
+            synthChart.update();
+        }
+
+        // 5. TAB NAVIGATION
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.main-tab-btn').forEach(btn => {
+                btn.className = "main-tab-btn px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-emerald-500/10";
+            });
+
+            document.getElementById(`content-${tabId}`).classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = "main-tab-btn px-4 py-2.5 rounded-xl transition-all flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+            }
+        }
+
+        // 6. MODAL HANDLERS
+
+        function openKnowledgeModal() {
+            document.getElementById('knowledgeModal').classList.remove('hidden');
+        }
+
+        function closeKnowledgeModal() {
+            document.getElementById('knowledgeModal').classList.add('hidden');
+        }
+
+        function toggleMobileNav() {
+            const tabs = document.querySelector('.main-tab-btn').parentElement;
+            tabs.classList.toggle('hidden');
+        }
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCrops(indianCrops);
+            renderTechModules();
+            initCharts();
+            updateTradSimulation();
+            updateSynthSimulation();
+        });
+    </script>
+</body>
+</html>
